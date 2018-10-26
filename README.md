@@ -11,7 +11,7 @@ encoding for Perl source code) better.
 
 # FUNCTIONS
 
-## list\_files ( \[ _start\_path_ | _%args_ \] )
+## list\_files
 
     my @files = list_files $path;
     my @files = list_files %args;

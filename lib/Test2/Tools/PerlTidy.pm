@@ -19,7 +19,7 @@ encoding for Perl source code) better.
 
 =head1 FUNCTIONS
 
-=head2 list_files ( [ I<start_path> | I<%args> ] )
+=head2 list_files
 
  my @files = list_files $path;
  my @files = list_files %args;
