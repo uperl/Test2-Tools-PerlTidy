@@ -44,6 +44,17 @@ Test all perl files for tidiness.  Options:
 
     Off by default, silence diagnostics.
 
+- skip\_all
+
+    Set `skip_all` to a true value to skip the whole test file.  There isn't really a good
+    reason to use this over the [Test2::V0](https://metacpan.org/pod/Test2::V0) `skip_all` function.
+
+- no\_plan
+
+    Set `no_plan` to skip the plan.  By default a plan with the number of files to be tested is
+    performed.  There isn't really a good reason to use this over a `done_testing` call, but
+    this is the default to maintain backward compatibility with [Test::PerlTidy](https://metacpan.org/pod/Test::PerlTidy).
+
 ## is\_file\_tidy
 
     use Test2::Tools::PerlTidy qw( is_file_tidy );

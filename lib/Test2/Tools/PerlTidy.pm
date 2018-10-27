@@ -61,6 +61,17 @@ this to override a specific tidy file.
 
 Off by default, silence diagnostics.
 
+=item skip_all
+
+Set C<skip_all> to a true value to skip the whole test file.  There isn't really a good
+reason to use this over the L<Test2::V0> C<skip_all> function.
+
+=item no_plan
+
+Set C<no_plan> to skip the plan.  By default a plan with the number of files to be tested is
+performed.  There isn't really a good reason to use this over a C<done_testing> call, but
+this is the default to maintain backward compatibility with L<Test::PerlTidy>.
+
 =back
 
 =cut
