@@ -37,7 +37,7 @@ Test all perl files for tidiness.  Options:
 
 - perltidyrc
 
-    By default the usual locations for the **perltidy** file will be searched.  You can use
+    By default the usual locations for the **perltidyrc** file will be searched.  You can use
     this to override a specific tidy file.
 
 - mute

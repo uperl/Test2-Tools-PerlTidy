@@ -54,7 +54,7 @@ tested.  Defaults to C<.>.
 
 =item perltidyrc
 
-By default the usual locations for the B<perltidy> file will be searched.  You can use
+By default the usual locations for the B<perltidyrc> file will be searched.  You can use
 this to override a specific tidy file.
 
 =item mute
