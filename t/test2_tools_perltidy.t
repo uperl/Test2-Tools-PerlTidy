@@ -1,10 +1,11 @@
+use utf8;
 use Test2::V0 -no_srand => 1;
 use Test2::Tools::PerlTidy;
 use Path::Tiny qw( path );
 
 subtest 'list files' => sub {
 
-  is(
+  is
     intercept { Test2::Tools::PerlTidy::list_files './corpus/not-there' },
     array {
       event Bail => sub {
@@ -12,9 +13,9 @@ subtest 'list files' => sub {
       };
       end;
     }
-  );
+  ;
 
-  is(
+  is
     intercept { Test2::Tools::PerlTidy::list_files('./corpus/just-a-file') },
     array {
       event Bail => sub {
@@ -22,9 +23,9 @@ subtest 'list files' => sub {
       };
       end;
     }
-  );
+  ;
 
-  is(
+  is
     intercept { Test2::Tools::PerlTidy::list_files(exclude => 'string') },
     array {
       event Bail => sub {
@@ -32,37 +33,61 @@ subtest 'list files' => sub {
       };
       end;
     }
-  );
+  ;
 
   chdir 'corpus/list-files';
 
-  is(
+  is
     [Test2::Tools::PerlTidy::list_files('.')],
     [qw(
       Makefile.PL
       lib/Foo/Bar/Baz.pm
       t/foo_bar_baz.t
     )],
-  );
+  ;
 
-  is(
+  is
     [Test2::Tools::PerlTidy::list_files(path => '.', exclude => [qr/\.pm$/])],
     [qw(
       Makefile.PL
       t/foo_bar_baz.t
     )],
-  );
+  ;
 
-  is(
+  is
     [Test2::Tools::PerlTidy::list_files(path => '.', exclude => ['t/'])],
     [qw(
       Makefile.PL
       blib/no-match.pm
       lib/Foo/Bar/Baz.pm
     )],
-  );
+  ;
 
   chdir '../..';
+
+};
+
+subtest 'load_file' => sub {
+
+  is
+    [Test2::Tools::PerlTidy::load_file],
+    []
+  ;
+
+  is
+    [Test2::Tools::PerlTidy::load_file 'corpus'],
+    []
+  ;
+
+  is
+    [Test2::Tools::PerlTidy::load_file 'corpus/not-there.txt'],
+    []
+  ;
+
+  is
+    [Test2::Tools::PerlTidy::load_file 'corpus/load-file'],
+    ["this is a file (火雞)\n"]
+  ;
 
 };
 

@@ -14,18 +14,19 @@ use Path::Tiny qw( path );
 
 =head1 DESCRIPTION
 
-This module lets you test your code for tidiness.  It is more or less a drop in replacement for L<Test::PerlTidy>, exclude that it is implemented using L<Test2::API>, and it handles UTF-8 (a common 
-encoding for Perl source code) better.
+This module lets you test your code for tidiness.  It is more or less a drop in replacement 
+for L<Test::PerlTidy>, exclude that it is implemented using L<Test2::API>, and it handles 
+UTF-8 (a common encoding for Perl source code) better.
 
 =head1 FUNCTIONS
 
 =head2 list_files
 
- my @files = list_files $path;
- my @files = list_files %args;
+ my @files = Test2::Tools::PerlTidy::list_files $path;
+ my @files = Test2::Tools::PerlTidy::list_files %args;
 
-Generate the list of files to be tested.  Don't use this.  Included as part of the public interface for
-backward compatibility with L<Test::PerlTidy>.
+Generate the list of files to be tested.  Don't use this.  Included as part of the public 
+interface for backward compatibility with L<Test::PerlTidy>.  Not exported.
 
 =cut
 
@@ -77,6 +78,23 @@ sub list_files
   $ctx->release;
 
   map { "$_" } sort @files;
+}
+
+=head2 load_file
+
+ my $content = Test2::Tools::PerlTidy::load_file $filename;
+
+Load the UTF-8 encoded file to be tested from disk and return the contents.  Don't use this.  
+Included as part of the public interface for backward compatibility with L<Test::PerlTidy>.  
+Not exported.
+
+=cut
+
+sub load_file
+{
+  my($filename) = @_;
+  return unless defined $filename && -f $filename;
+  path($filename)->slurp_utf8;
 }
 
 1;

@@ -14,6 +14,7 @@ $modules{$_} = $_ for qw(
   Path::Tiny
   Test2::API
   Test2::V0
+  utf8
 );
 
 

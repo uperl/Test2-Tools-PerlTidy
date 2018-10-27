@@ -6,18 +6,27 @@ Test2 check that all of your Perl files are tidy
 
 # DESCRIPTION
 
-This module lets you test your code for tidiness.  It is more or less a drop in replacement for [Test::PerlTidy](https://metacpan.org/pod/Test::PerlTidy), exclude that it is implemented using [Test2::API](https://metacpan.org/pod/Test2::API), and it handles UTF-8 (a common 
-encoding for Perl source code) better.
+This module lets you test your code for tidiness.  It is more or less a drop in replacement 
+for [Test::PerlTidy](https://metacpan.org/pod/Test::PerlTidy), exclude that it is implemented using [Test2::API](https://metacpan.org/pod/Test2::API), and it handles 
+UTF-8 (a common encoding for Perl source code) better.
 
 # FUNCTIONS
 
 ## list\_files
 
-    my @files = list_files $path;
-    my @files = list_files %args;
+    my @files = Test2::Tools::PerlTidy::list_files $path;
+    my @files = Test2::Tools::PerlTidy::list_files %args;
 
-Generate the list of files to be tested.  Don't use this.  Included as part of the public interface for
-backward compatibility with [Test::PerlTidy](https://metacpan.org/pod/Test::PerlTidy).
+Generate the list of files to be tested.  Don't use this.  Included as part of the public 
+interface for backward compatibility with [Test::PerlTidy](https://metacpan.org/pod/Test::PerlTidy).  Not exported.
+
+## load\_file
+
+    my $content = Test2::Tools::PerlTidy::load_file $filename;
+
+Load the UTF-8 encoded file to be tested from disk and return the contents.  Don't use this.  
+Included as part of the public interface for backward compatibility with [Test::PerlTidy](https://metacpan.org/pod/Test::PerlTidy).  
+Not exported.
 
 # AUTHOR
 
