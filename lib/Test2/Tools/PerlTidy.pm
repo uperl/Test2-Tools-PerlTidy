@@ -11,7 +11,8 @@ use IO::File;
 use Text::Diff qw( diff );
 use base qw( Exporter );
 
-our @EXPORT_OK = qw( is_file_tidy );
+our @EXPORT    = qw( run_tests );
+our @EXPORT_OK = qw( run_tests is_file_tidy );
 
 # ABSTRACT: Test2 check that all of your Perl files are tidy
 # VERSION
@@ -20,11 +21,85 @@ our @EXPORT_OK = qw( is_file_tidy );
 
 =head1 DESCRIPTION
 
-This module lets you test your code for tidiness.  It is more or less a drop in replacement 
-for L<Test::PerlTidy>, exclude that it is implemented using L<Test2::API>, and it handles 
-UTF-8 (a common encoding for Perl source code) better.
+This module lets you test your code for tidiness.  It is more or less a drop in replacement
+for L<Test::PerlTidy>, except that it is implemented using L<Test2::API>, and it handles
+UTF-8 (a common encoding for Perl source code) better, and works on windows.
 
 =head1 FUNCTIONS
+
+=head2 run_tests
+
+ run_tests %args;
+
+Test all perl files for tidiness.  Options:
+
+=over 4
+
+=item exclude
+
+C<run_tests> will look for files to test under the current directory recursively.  by default
+it will exclude files in the C<./blib/> directory.  Set C<exclude> to a list reference to
+exclusion criteria if you need to exclude additional files.  Strings are assumed to be
+path prefixes and regular expressions can be used to match any part of the file path name.
+
+Note that unlike L<Test::PerlTidy>, this module does NOT use
+L<File::Spec|File::Spec>C<< ->canonpath >> before matching is attempted, because that breaks
+this module on windows.  Instead L<Path::Tiny> is used which gives consistent results on both
+UNIX and Windows.
+
+=item path
+
+Set C<path> to the path of the top-level directory that contains the files to be
+tested.  Defaults to C<.>.
+
+=item perltidyrc
+
+By default the usual locations for the B<perltidy> file will be searched.  You can use
+this to override a specific tidy file.
+
+=item mute
+
+Off by default, silence diagnostics.
+
+=back
+
+=cut
+
+sub run_tests
+{
+  my %args = @_;
+
+  my $ctx = context();
+
+  if($args{skip_all})
+  {
+    $ctx->plan(0, SKIP => 'All tests skipped.');
+  }
+
+  my @files = list_files(%args);
+
+  $ctx->plan(scalar @files) unless $args{no_plan};
+
+  foreach my $file (@files)
+  {
+    my @diag;
+    my $name = "'$file'";
+    $args{diag} = sub { push @diag, @_ };
+    my $ok = is_file_tidy($file, $args{perltidyrc}, %args);
+    if($ok)
+    {
+      $ctx->pass($name);
+    }
+    else
+    {
+      $ctx->fail($name, @diag);
+    }
+  }
+
+  $ctx->release;
+
+  ();
+}
 
 =head2 is_file_tidy
 
@@ -32,7 +107,7 @@ UTF-8 (a common encoding for Perl source code) better.
  my $bool = is_file_tidy $filename;
  my $bool = is_file_tidy $filename, $perltidyrc;
 
-Returns true if the file is tidy or false otherwise.  Sends diagnostics via the L<Test2> API. 
+Returns true if the file is tidy or false otherwise.  Sends diagnostics via the L<Test2> API.
 Exportable on request.
 
 =cut
@@ -106,7 +181,7 @@ sub is_file_tidy
  my @files = Test2::Tools::PerlTidy::list_files $path;
  my @files = Test2::Tools::PerlTidy::list_files %args;
 
-Generate the list of files to be tested.  Don't use this.  Included as part of the public 
+Generate the list of files to be tested.  Don't use this.  Included as part of the public
 interface for backward compatibility with L<Test::PerlTidy>.  Not exported.
 
 =cut
@@ -164,8 +239,8 @@ sub list_files
 
  my $content = Test2::Tools::PerlTidy::load_file $filename;
 
-Load the UTF-8 encoded file to be tested from disk and return the contents.  Don't use this.  
-Included as part of the public interface for backward compatibility with L<Test::PerlTidy>.  
+Load the UTF-8 encoded file to be tested from disk and return the contents.  Don't use this.
+Included as part of the public interface for backward compatibility with L<Test::PerlTidy>.
 Not exported.
 
 =cut

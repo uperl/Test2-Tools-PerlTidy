@@ -1,6 +1,6 @@
 use utf8;
 use Test2::V0 -no_srand => 1;
-use Test2::Tools::PerlTidy qw( is_file_tidy );
+use Test2::Tools::PerlTidy qw( is_file_tidy run_tests );
 use Path::Tiny qw( path );
 
 subtest 'list files' => sub {
@@ -148,9 +148,9 @@ subtest 'is_file_tidy' => sub {
         },
       ],
     );
-  
+
     my $ok;
-    is(
+    is
       intercept { $ok = is_file_tidy 'corpus/just-a-file' },
       array {
         event Diag => sub {
@@ -161,10 +161,74 @@ subtest 'is_file_tidy' => sub {
         };
         end;
       },
-    );
+    ;
     is $ok, F();
 
   };
+
+};
+
+subtest 'run_tests' => sub {
+
+  is
+    intercept { run_tests skip_all => 1 },
+    array {
+      event Plan => sub {
+        call directive => 'SKIP';
+        call reason => 'All tests skipped.';
+      };
+      end;
+    }
+  ;
+
+  chdir 'corpus/list-files';
+
+  is
+    intercept { run_tests },
+    array {
+      event Plan => sub {
+        call max => 3;
+      };
+      event Pass => sub {
+        call name => "'$_'";
+      } for qw( Makefile.PL lib/Foo/Bar/Baz.pm t/foo_bar_baz.t );
+      end;
+    }
+  ;
+
+  is
+    intercept { run_tests no_plan => 1 },
+    array {
+      event Pass => sub {
+        call name => "'$_'";
+      } for qw( Makefile.PL lib/Foo/Bar/Baz.pm t/foo_bar_baz.t );
+      end;
+    }
+  ;
+
+  chdir '../fail';
+
+  is
+    intercept { run_tests },
+    array {
+      event Plan => sub {
+        call max => 3;
+      };
+      event Pass => sub {
+        call name => "'Makefile.PL'";
+      };
+      event Fail => sub {
+        call name => "'lib/Foo/Bar/Baz.pm'";
+        # TODO: check diagnostics
+      };
+      event Pass => sub {
+        call name => "'t/foo_bar_baz.t'";
+      };
+      end;
+    }
+  ;
+
+  chdir '../..'; 
 
 };
 
