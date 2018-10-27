@@ -1,6 +1,6 @@
 use utf8;
 use Test2::V0 -no_srand => 1;
-use Test2::Tools::PerlTidy;
+use Test2::Tools::PerlTidy qw( is_file_tidy );
 use Path::Tiny qw( path );
 
 subtest 'list files' => sub {
@@ -88,6 +88,83 @@ subtest 'load_file' => sub {
     [Test2::Tools::PerlTidy::load_file 'corpus/load-file'],
     ["this is a file (火雞)\n"]
   ;
+
+};
+
+subtest 'is_file_tidy' => sub {
+
+  subtest 'bad file' => sub {
+    my $ok;
+    is
+      intercept { $ok = is_file_tidy 'corpus/not-there.txt' },
+      array {
+        event Diag => sub {
+          call message => "Unable to find or read 'corpus/not-there.txt'";
+        };
+        end;
+      },
+    ;
+    is $ok, F();
+  };
+
+  subtest 'untidy file' => sub {
+    my $ok;
+    my $events;
+    is
+      $events = intercept { $ok = is_file_tidy 'corpus/messy_file.txt' },
+      array {
+        event Diag => sub {
+          call message => "The file 'corpus/messy_file.txt' is not tidy";
+        };
+        event Diag => sub {
+        };
+        end;
+      },
+    ;
+    is $ok, F();
+    note "diagnostic as follows:";
+    note $events->[0]->message;
+    note $events->[1]->message;
+  };
+
+  subtest 'tidy file passes' => sub {
+    my $ok;
+    is
+      intercept { $ok = is_file_tidy 'corpus/just-a-file' },
+      [],
+    ;
+    is $ok, T();
+  };
+
+  subtest 'stderr' => sub {
+
+    my $mock = mock 'Perl::Tidy' => (
+      override => [
+        perltidy => sub {
+          my %args = @_;
+          ${ $args{destination} } = ${ $args{source} };
+          my $stderr = $args{stderr};
+          print $stderr "Something wrong happened\n";
+        },
+      ],
+    );
+  
+    my $ok;
+    is(
+      intercept { $ok = is_file_tidy 'corpus/just-a-file' },
+      array {
+        event Diag => sub {
+          call message => "perltidy reported the following errors:";
+        };
+        event Diag => sub {
+          call message => "Something wrong happened\n";
+        };
+        end;
+      },
+    );
+    is $ok, F();
+
+  };
 
 };
 

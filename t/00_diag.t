@@ -10,11 +10,13 @@ my %modules;
 my $post_diag;
 
 $modules{$_} = $_ for qw(
+  Exporter
   ExtUtils::MakeMaker
   Path::Tiny
+  Perl::Tidy
   Test2::API
   Test2::V0
-  utf8
+  Text::Diff
 );
 
 

@@ -6,6 +6,12 @@ use 5.008001;
 use Test2::API qw( context );
 use File::Find ();
 use Path::Tiny qw( path );
+use Perl::Tidy ();
+use IO::File;
+use Text::Diff qw( diff );
+use base qw( Exporter );
+
+our @EXPORT_OK = qw( is_file_tidy );
 
 # ABSTRACT: Test2 check that all of your Perl files are tidy
 # VERSION
@@ -19,6 +25,81 @@ for L<Test::PerlTidy>, exclude that it is implemented using L<Test2::API>, and i
 UTF-8 (a common encoding for Perl source code) better.
 
 =head1 FUNCTIONS
+
+=head2 is_file_tidy
+
+ use Test2::Tools::PerlTidy qw( is_file_tidy );
+ my $bool = is_file_tidy $filename;
+ my $bool = is_file_tidy $filename, $perltidyrc;
+
+Returns true if the file is tidy or false otherwise.  Sends diagnostics via the L<Test2> API. 
+Exportable on request.
+
+=cut
+
+sub is_file_tidy
+{
+  my($file_to_tidy, $perltidyrc, %args) = @_;
+
+  my $code_to_tidy = load_file($file_to_tidy);
+
+  my $ctx         = context();
+  my $diag        = $args{mute} ? sub { } : $args{diag} || sub { $ctx->diag(shift) };
+  my $tidied_code = '';
+  my $logfile     = '';
+  my $errorfile   = '';
+
+  unless(defined $code_to_tidy)
+  {
+    $diag->("Unable to find or read '$file_to_tidy'");
+    $ctx->release;
+    return 0;
+  }
+
+  my $stderr_fh = IO::File->new_tmpfile or die "Unable to open temp file $!";
+  $stderr_fh->autoflush(1);
+
+  Perl::Tidy::perltidy(
+    source      => \$code_to_tidy,
+    destination => \$tidied_code,
+    stderr      => $stderr_fh,
+    logfile     => \$logfile,
+    errorfile   => \$errorfile,
+    perltidyrc  => $perltidyrc,
+  );
+
+  $stderr_fh->seek(0,0);
+  my $stderr = do {
+    local $/;
+    <$stderr_fh>;
+  };
+
+  my @diag;
+
+  if($stderr)
+  {
+    $diag->("perltidy reported the following errors:");
+    $diag->($stderr);
+    $ctx->release;
+    return 0;
+  }
+
+  $code_to_tidy =~ s/[\r\n]+$//;
+  $tidied_code  =~ s/[\r\n]+$//;
+
+  if($code_to_tidy eq $tidied_code)
+  {
+    $ctx->release;
+    return 1;
+  }
+  else
+  {
+    $diag->("The file '$file_to_tidy' is not tidy");
+    $diag->(diff( \$code_to_tidy, \$tidied_code, { STYLE => 'Table' }));
+    $ctx->release;
+    return 0;
+  }
+}
 
 =head2 list_files
 
@@ -65,7 +146,6 @@ sub list_files
       my $filename = $_;
       return if -d $filename;
       my $path = path($File::Find::name);
-      $DB::single = 1;
       foreach my $exclude (@$excludes)
       {
         return if ref $exclude ? $path =~ $exclude : $path =~ /^$exclude/;

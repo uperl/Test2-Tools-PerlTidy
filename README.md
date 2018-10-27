@@ -12,6 +12,15 @@ UTF-8 (a common encoding for Perl source code) better.
 
 # FUNCTIONS
 
+## is\_file\_tidy
+
+    use Test2::Tools::PerlTidy qw( is_file_tidy );
+    my $bool = is_file_tidy $filename;
+    my $bool = is_file_tidy $filename, $perltidyrc;
+
+Returns true if the file is tidy or false otherwise.  Sends diagnostics via the [Test2](https://metacpan.org/pod/Test2) API. 
+Exportable on request.
+
 ## list\_files
 
     my @files = Test2::Tools::PerlTidy::list_files $path;
