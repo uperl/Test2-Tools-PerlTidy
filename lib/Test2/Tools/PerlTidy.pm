@@ -264,3 +264,21 @@ sub load_file
 }
 
 1;
+
+=head1 CAVEATS
+
+This module uses L<Text::Diff> to compare how untidy files are different from the tidy
+counterparts.  By default L<Text::Diff> escapes Unicode characters, which keeps the tables
+lined up correctly even when the characters are of different widths.  You can change
+this behavior by setting C<$Text::Diff::Config::Output_Unicode> to a true value.  For
+example:
+
+ use Test2::Tools::PerlTidy;
+
+ local $Text::Diff::Config::Output_Unicode = 1;
+ run_tests;
+
+will print out any Unicode characters as-is, but may produce table cells that do not
+line up if the characters are of different widths.
+
+=cut

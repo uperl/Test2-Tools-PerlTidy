@@ -80,6 +80,22 @@ Load the UTF-8 encoded file to be tested from disk and return the contents.  Don
 Included as part of the public interface for backward compatibility with [Test::PerlTidy](https://metacpan.org/pod/Test::PerlTidy).
 Not exported.
 
+# CAVEATS
+
+This module uses [Text::Diff](https://metacpan.org/pod/Text::Diff) to compare how untidy files are different from the tidy
+counterparts.  By default [Text::Diff](https://metacpan.org/pod/Text::Diff) escapes Unicode characters, which keeps the tables
+lined up correctly even when the characters are of different widths.  You can change
+this behavior by setting `$Text::Diff::Config::Output_Unicode` to a true value.  For
+example:
+
+    use Test2::Tools::PerlTidy;
+
+    local $Text::Diff::Config::Output_Unicode = 1;
+    run_tests;
+
+will print out any Unicode characters as-is, but may produce table cells that do not
+line up if the characters are of different widths.
+
 # AUTHOR
 
 Graham Ollis <plicease@cpan.org>
