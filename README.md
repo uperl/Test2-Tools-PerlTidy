@@ -1,4 +1,4 @@
-# Test2::Tools::PerlTidy ![linux](https://github.com/uperl/Test2-Tools-PerlTidy/workflows/linux/badge.svg) ![macos](https://github.com/uperl/Test2-Tools-PerlTidy/workflows/macos/badge.svg) ![windows](https://github.com/uperl/Test2-Tools-PerlTidy/workflows/windows/badge.svg) ![msys2-mingw](https://github.com/uperl/Test2-Tools-PerlTidy/workflows/msys2-mingw/badge.svg)
+# Test2::Tools::PerlTidy ![linux](https://github.com/uperl/Test2-Tools-PerlTidy/workflows/linux/badge.svg) ![macos](https://github.com/uperl/Test2-Tools-PerlTidy/workflows/macos/badge.svg) ![windows](https://github.com/uperl/Test2-Tools-PerlTidy/workflows/windows/badge.svg)
 
 Test2 check that all of your Perl files are tidy
 
