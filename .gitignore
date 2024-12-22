@@ -1,3 +1,5 @@
 /Test2-Tools-PerlTidy-*
 /.build
 *.swp
+*.old
+*.orig
