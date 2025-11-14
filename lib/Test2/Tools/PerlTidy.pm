@@ -108,10 +108,23 @@ sub run_tests (%args) {
 
  use Test2::Tools::PerlTidy qw( is_file_tidy );
  my $bool = is_file_tidy $filename;
- my $bool = is_file_tidy $filename, $perltidyrc;
+ my $bool = is_file_tidy $filename, $perltidyrc, %options;
 
 Returns true if the file is tidy or false otherwise.  Sends diagnostics via the L<Test2> API.
-Exportable on request.
+Exportable on request.  Available options:
+
+=over 4
+
+=item mute
+
+Do not generate diagnostics.
+
+=item return_diff_object
+
+Instead of generating diagnostics, and returning a boolean, this will return an instance
+of L<Test2::Tools::PerlTidy::Diff>.
+
+=back
 
 =cut
 
@@ -169,13 +182,15 @@ package Test2::Tools::PerlTidy::Diff {
 sub is_file_tidy ($file_to_tidy, $perltidyrc=undef, %args)  {
     my $code_to_tidy = load_file($file_to_tidy);
 
-    my $ctx  = context();
-    my $diag = $args{mute} ? sub { } : $args{diag} || sub { $ctx->diag(shift) };
-
     unless(defined $code_to_tidy) {
-        $diag->("Unable to find or read '$file_to_tidy'");
-        $ctx->release;
-        return 0;
+        if($args{return_diff_object}) {
+            die "Unable to find or read '$file_to_tidy'";
+        } else {
+            my $ctx = context();
+            $ctx->diag("Unable to find or read '$file_to_tidy'");
+            $ctx->release;
+            return 0;
+        }
     }
 
     my $diff = Test2::Tools::PerlTidy::Diff->new(
@@ -183,6 +198,13 @@ sub is_file_tidy ($file_to_tidy, $perltidyrc=undef, %args)  {
         code_to_tidy => $code_to_tidy,
         perltidyrc   => $perltidyrc,
     );
+
+    if($args{return_diff_object}) {
+        return $diff;
+    }
+
+    my $ctx  = context();
+    my $diag = $args{mute} ? sub { } : $args{diag} || sub { $ctx->diag(shift) };
 
     my @diag;
 

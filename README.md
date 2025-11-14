@@ -62,11 +62,20 @@ Test all perl files for tidiness.  Options:
 ```perl
 use Test2::Tools::PerlTidy qw( is_file_tidy );
 my $bool = is_file_tidy $filename;
-my $bool = is_file_tidy $filename, $perltidyrc;
+my $bool = is_file_tidy $filename, $perltidyrc, %options;
 ```
 
 Returns true if the file is tidy or false otherwise.  Sends diagnostics via the [Test2](https://metacpan.org/pod/Test2) API.
-Exportable on request.
+Exportable on request.  Available options:
+
+- mute
+
+    Do not generate diagnostics.
+
+- return\_diff\_object
+
+    Instead of generating diagnostics, and returning a boolean, this will return an instance
+    of [Test2::Tools::PerlTidy::Diff](https://metacpan.org/pod/Test2::Tools::PerlTidy::Diff).
 
 ## list\_files
 
