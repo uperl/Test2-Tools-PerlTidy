@@ -8,7 +8,6 @@ use File::Find ();
 use Path::Tiny qw( path );
 use Perl::Tidy ();
 use IO::File;
-use Text::Diff qw( diff );
 use Exporter qw( import );
 use experimental qw( signatures );
 
@@ -116,14 +115,62 @@ Exportable on request.
 
 =cut
 
+package Test2::Tools::PerlTidy::Diff {
+
+    use Text::Diff ();
+    use Class::Tiny qw( file_to_tidy code_to_tidy perltidyrc is_tidy diff tidied_code logfile errorfile stderr );
+
+    sub BUILD ($self, $) {
+
+        my $code_to_tidy = $self->code_to_tidy;
+        my $tidied_code  = '';
+        my $logfile      = '';
+        my $errorfile    = '';
+
+        my $stderr_fh = IO::File->new_tmpfile or die "Unable to open temp file $!";
+        $stderr_fh->autoflush(1);
+
+        Perl::Tidy::perltidy(
+            source      => \$code_to_tidy,
+            destination => \$tidied_code,
+            stderr      => $stderr_fh,
+            logfile     => \$logfile,
+            errorfile   => \$errorfile,
+            perltidyrc  => $self->perltidyrc,
+        );
+
+        $stderr_fh->seek(0,0);
+        my $stderr = do {
+            local $/;
+            <$stderr_fh>;
+        };
+
+        $self->is_tidy(0);
+
+        unless($stderr) {
+            $code_to_tidy =~ s/[\r\n]+$//;
+            $tidied_code  =~ s/[\r\n]+$//;
+
+            if($code_to_tidy eq $tidied_code) {
+                $self->diff('');
+                $self->is_tidy(1);
+            } else {
+                $self->diff( Text::Diff::diff( \$code_to_tidy, \$tidied_code, { STYLE => 'Table' }) );
+            }
+        }
+
+        $self->tidied_code($tidied_code);
+        $self->logfile($logfile);
+        $self->errorfile($errorfile);
+        $self->stderr($stderr);
+    }
+}
+
 sub is_file_tidy ($file_to_tidy, $perltidyrc=undef, %args)  {
   my $code_to_tidy = load_file($file_to_tidy);
 
   my $ctx         = context();
   my $diag        = $args{mute} ? sub { } : $args{diag} || sub { $ctx->diag(shift) };
-  my $tidied_code = '';
-  my $logfile     = '';
-  my $errorfile   = '';
 
   unless(defined $code_to_tidy) {
     $diag->("Unable to find or read '$file_to_tidy'");
@@ -131,44 +178,29 @@ sub is_file_tidy ($file_to_tidy, $perltidyrc=undef, %args)  {
     return 0;
   }
 
-  my $stderr_fh = IO::File->new_tmpfile or die "Unable to open temp file $!";
-  $stderr_fh->autoflush(1);
-
-  Perl::Tidy::perltidy(
-    source      => \$code_to_tidy,
-    destination => \$tidied_code,
-    stderr      => $stderr_fh,
-    logfile     => \$logfile,
-    errorfile   => \$errorfile,
-    perltidyrc  => $perltidyrc,
+  my $diff = Test2::Tools::PerlTidy::Diff->new(
+      file_to_tidy => $file_to_tidy,
+      code_to_tidy => $code_to_tidy,
+      perltidyrc   => $perltidyrc,
   );
-
-  $stderr_fh->seek(0,0);
-  my $stderr = do {
-    local $/;
-    <$stderr_fh>;
-  };
 
   my @diag;
 
-  if($stderr) {
+  if($diff->stderr) {
     $diag->("perltidy reported the following errors:");
-    $diag->($stderr);
+    $diag->($diff->stderr);
     $ctx->release;
     return 0;
   }
 
-  $code_to_tidy =~ s/[\r\n]+$//;
-  $tidied_code  =~ s/[\r\n]+$//;
-
-  if($code_to_tidy eq $tidied_code) {
-    $ctx->release;
-    return 1;
+  if($diff->is_tidy) {
+      $ctx->release;
+      return 1;
   } else {
-    $diag->("The file '$file_to_tidy' is not tidy");
-    $diag->(diff( \$code_to_tidy, \$tidied_code, { STYLE => 'Table' }));
-    $ctx->release;
-    return 0;
+      $diag->("The file '$file_to_tidy' is not tidy");
+      $diag->($diff->diff);
+      $ctx->release;
+      return 0;
   }
 }
 
