@@ -2,14 +2,15 @@ package Test2::Tools::PerlTidy;
 
 use strict;
 use warnings;
-use 5.008001;
+use 5.020;
 use Test2::API qw( context );
 use File::Find ();
 use Path::Tiny qw( path );
 use Perl::Tidy ();
 use IO::File;
 use Text::Diff qw( diff );
-use base qw( Exporter );
+use Exporter qw( import );
+use experimental qw( signatures );
 
 our @EXPORT    = qw( run_tests );
 our @EXPORT_OK = qw( run_tests is_file_tidy );
@@ -76,14 +77,10 @@ this is the default to maintain backward compatibility with L<Test::PerlTidy>.
 
 =cut
 
-sub run_tests
-{
-  my %args = @_;
-
+sub run_tests (%args) {
   my $ctx = context();
 
-  if($args{skip_all})
-  {
+  if($args{skip_all}) {
     $ctx->plan(0, SKIP => 'All tests skipped.');
   }
 
@@ -91,18 +88,14 @@ sub run_tests
 
   $ctx->plan(scalar @files) unless $args{no_plan};
 
-  foreach my $file (@files)
-  {
+  foreach my $file (@files) {
     my @diag;
     my $name = "'$file'";
     $args{diag} = sub { push @diag, @_ };
     my $ok = is_file_tidy($file, $args{perltidyrc}, %args);
-    if($ok)
-    {
+    if($ok) {
       $ctx->pass($name);
-    }
-    else
-    {
+    } else {
       $ctx->fail($name, @diag);
     }
   }
@@ -123,10 +116,7 @@ Exportable on request.
 
 =cut
 
-sub is_file_tidy
-{
-  my($file_to_tidy, $perltidyrc, %args) = @_;
-
+sub is_file_tidy ($file_to_tidy, $perltidyrc=undef, %args)  {
   my $code_to_tidy = load_file($file_to_tidy);
 
   my $ctx         = context();
@@ -135,8 +125,7 @@ sub is_file_tidy
   my $logfile     = '';
   my $errorfile   = '';
 
-  unless(defined $code_to_tidy)
-  {
+  unless(defined $code_to_tidy) {
     $diag->("Unable to find or read '$file_to_tidy'");
     $ctx->release;
     return 0;
@@ -162,8 +151,7 @@ sub is_file_tidy
 
   my @diag;
 
-  if($stderr)
-  {
+  if($stderr) {
     $diag->("perltidy reported the following errors:");
     $diag->($stderr);
     $ctx->release;
@@ -173,13 +161,10 @@ sub is_file_tidy
   $code_to_tidy =~ s/[\r\n]+$//;
   $tidied_code  =~ s/[\r\n]+$//;
 
-  if($code_to_tidy eq $tidied_code)
-  {
+  if($code_to_tidy eq $tidied_code) {
     $ctx->release;
     return 1;
-  }
-  else
-  {
+  } else {
     $diag->("The file '$file_to_tidy' is not tidy");
     $diag->(diff( \$code_to_tidy, \$tidied_code, { STYLE => 'Table' }));
     $ctx->release;
@@ -197,19 +182,15 @@ interface for backward compatibility with L<Test::PerlTidy>.  Not exported.
 
 =cut
 
-sub list_files
-{
+sub list_files {
   my %args;
   my $path;
 
   # path as only argument is for backward compatability with Test::PerlTidy
-  if(@_ > 1)
-  {
+  if(@_ > 1) {
     %args = @_;
     $path = $args{path};
-  }
-  else
-  {
+  } else {
     ($path) = @_;
   }
 
@@ -256,9 +237,7 @@ Not exported.
 
 =cut
 
-sub load_file
-{
-  my($filename) = @_;
+sub load_file ($filename=undef) {
   return unless defined $filename && -f $filename;
   path($filename)->slurp_utf8;
 }
