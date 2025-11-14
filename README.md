@@ -7,8 +7,9 @@ Test2 check that all of your Perl files are tidy
 # DESCRIPTION
 
 This module lets you test your code for tidiness.  It is more or less a drop in replacement
-for [Test::PerlTidy](https://metacpan.org/pod/Test::PerlTidy), except that it is implemented using [Test2::API](https://metacpan.org/pod/Test2::API), and it handles
-UTF-8 (a common encoding for Perl source code) better, and works on windows.
+for [Test::PerlTidy](https://metacpan.org/pod/Test::PerlTidy), except that it is implemented using [Test2::API](https://metacpan.org/pod/Test2::API).  The [is\_file\_tidy](https://metacpan.org/pod/is_file_tidy)
+function mentioned below also takes an option `return_diff_object` below that did not exist
+in the original.
 
 # FUNCTIONS
 
