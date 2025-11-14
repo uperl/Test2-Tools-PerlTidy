@@ -22,8 +22,9 @@ our @EXPORT_OK = qw( run_tests is_file_tidy );
 =head1 DESCRIPTION
 
 This module lets you test your code for tidiness.  It is more or less a drop in replacement
-for L<Test::PerlTidy>, except that it is implemented using L<Test2::API>, and it handles
-UTF-8 (a common encoding for Perl source code) better, and works on windows.
+for L<Test::PerlTidy>, except that it is implemented using L<Test2::API>.  The L<is_file_tidy>
+function mentioned below also takes an option C<return_diff_object> below that did not exist
+in the original.
 
 =head1 FUNCTIONS
 
