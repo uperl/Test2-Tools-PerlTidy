@@ -77,31 +77,31 @@ this is the default to maintain backward compatibility with L<Test::PerlTidy>.
 =cut
 
 sub run_tests (%args) {
-  my $ctx = context();
+    my $ctx = context();
 
-  if($args{skip_all}) {
-    $ctx->plan(0, SKIP => 'All tests skipped.');
-  }
-
-  my @files = list_files(%args);
-
-  $ctx->plan(scalar @files) unless $args{no_plan};
-
-  foreach my $file (@files) {
-    my @diag;
-    my $name = "'$file'";
-    $args{diag} = sub { push @diag, @_ };
-    my $ok = is_file_tidy($file, $args{perltidyrc}, %args);
-    if($ok) {
-      $ctx->pass($name);
-    } else {
-      $ctx->fail($name, @diag);
+    if($args{skip_all}) {
+        $ctx->plan(0, SKIP => 'All tests skipped.');
     }
-  }
 
-  $ctx->release;
+    my @files = list_files(%args);
 
-  ();
+    $ctx->plan(scalar @files) unless $args{no_plan};
+
+    foreach my $file (@files) {
+        my @diag;
+        my $name = "'$file'";
+        $args{diag} = sub { push @diag, @_ };
+        my $ok = is_file_tidy($file, $args{perltidyrc}, %args);
+        if($ok) {
+            $ctx->pass($name);
+        } else {
+            $ctx->fail($name, @diag);
+        }
+    }
+
+    $ctx->release;
+
+    ();
 }
 
 =head2 is_file_tidy
@@ -167,41 +167,41 @@ package Test2::Tools::PerlTidy::Diff {
 }
 
 sub is_file_tidy ($file_to_tidy, $perltidyrc=undef, %args)  {
-  my $code_to_tidy = load_file($file_to_tidy);
+    my $code_to_tidy = load_file($file_to_tidy);
 
-  my $ctx         = context();
-  my $diag        = $args{mute} ? sub { } : $args{diag} || sub { $ctx->diag(shift) };
+    my $ctx  = context();
+    my $diag = $args{mute} ? sub { } : $args{diag} || sub { $ctx->diag(shift) };
 
-  unless(defined $code_to_tidy) {
-    $diag->("Unable to find or read '$file_to_tidy'");
-    $ctx->release;
-    return 0;
-  }
+    unless(defined $code_to_tidy) {
+        $diag->("Unable to find or read '$file_to_tidy'");
+        $ctx->release;
+        return 0;
+    }
 
-  my $diff = Test2::Tools::PerlTidy::Diff->new(
-      file_to_tidy => $file_to_tidy,
-      code_to_tidy => $code_to_tidy,
-      perltidyrc   => $perltidyrc,
-  );
+    my $diff = Test2::Tools::PerlTidy::Diff->new(
+        file_to_tidy => $file_to_tidy,
+        code_to_tidy => $code_to_tidy,
+        perltidyrc   => $perltidyrc,
+    );
 
-  my @diag;
+    my @diag;
 
-  if($diff->stderr) {
-    $diag->("perltidy reported the following errors:");
-    $diag->($diff->stderr);
-    $ctx->release;
-    return 0;
-  }
+    if($diff->stderr) {
+        $diag->("perltidy reported the following errors:");
+        $diag->($diff->stderr);
+        $ctx->release;
+        return 0;
+    }
 
-  if($diff->is_tidy) {
-      $ctx->release;
-      return 1;
-  } else {
-      $diag->("The file '$file_to_tidy' is not tidy");
-      $diag->($diff->diff);
-      $ctx->release;
-      return 0;
-  }
+    if($diff->is_tidy) {
+        $ctx->release;
+        return 1;
+    } else {
+        $diag->("The file '$file_to_tidy' is not tidy");
+        $diag->($diff->diff);
+        $ctx->release;
+        return 0;
+    }
 }
 
 =head2 list_files
@@ -215,48 +215,47 @@ interface for backward compatibility with L<Test::PerlTidy>.  Not exported.
 =cut
 
 sub list_files {
-  my %args;
-  my $path;
+    my %args;
+    my $path;
 
-  # path as only argument is for backward compatability with Test::PerlTidy
-  if(@_ > 1) {
-    %args = @_;
-    $path = $args{path};
-  } else {
-    ($path) = @_;
-  }
+    # path as only argument is for backward compatability with Test::PerlTidy
+    if(@_ > 1) {
+        %args = @_;
+        $path = $args{path};
+    } else {
+        ($path) = @_;
+    }
 
-  $path ||= '.';
+    $path ||= '.';
 
-  my $ctx = context();
+    my $ctx = context();
 
-  $ctx->bail("$path does not exist") unless -e $path;
-  $ctx->bail("$path is not a directory") unless -d $path;
+    $ctx->bail("$path does not exist") unless -e $path;
+    $ctx->bail("$path is not a directory") unless -d $path;
 
-  my $excludes = $args{exclude} || [qr/^blib\//];   # exclude blib by default
+    my $excludes = $args{exclude} || [qr/^blib\//];   # exclude blib by default
 
-  $ctx->bail("exclude must be an array")
-    unless ref $excludes eq 'ARRAY';
+    $ctx->bail("exclude must be an array")
+        unless ref $excludes eq 'ARRAY';
 
-  my @files;
+    my @files;
 
-  File::Find::find(
-    sub {
-      my $filename = $_;
-      return if -d $filename;
-      my $path = path($File::Find::name);
-      foreach my $exclude (@$excludes)
-      {
-        return if ref $exclude ? $path =~ $exclude : $path =~ /^$exclude/;
-      }
-      push @files, $path if $filename =~ /\.(?:pl|pm|PL|t)$/;
-    },
-    $path,
-  );
+    File::Find::find(
+        sub {
+            my $filename = $_;
+            return if -d $filename;
+            my $path = path($File::Find::name);
+            foreach my $exclude (@$excludes) {
+                return if ref $exclude ? $path =~ $exclude : $path =~ /^$exclude/;
+            }
+            push @files, $path if $filename =~ /\.(?:pl|pm|PL|t)$/;
+        },
+        $path,
+    );
 
-  $ctx->release;
+    $ctx->release;
 
-  map { "$_" } sort @files;
+    map { "$_" } sort @files;
 }
 
 =head2 load_file
@@ -270,8 +269,8 @@ Not exported.
 =cut
 
 sub load_file ($filename=undef) {
-  return unless defined $filename && -f $filename;
-  path($filename)->slurp_utf8;
+    return unless defined $filename && -f $filename;
+    path($filename)->slurp_utf8;
 }
 
 1;
